@@ -420,12 +420,12 @@ uint8_t OracleP11(uint8_t* buff, uint8_t len) {
   after = values[1] % 5 + 5;
   whichAES = values[2] % 2;
   uint8_t olen = len + before + after;
-  Serial.print("before: "); Serial.print(before);
-  Serial.print(", after: "); Serial.print(after);
-  Serial.print(", whichAES: "); Serial.print(whichAES);
-  if(whichAES == 0) Serial.println(" ECB enabled.");
-  else Serial.println(" CBC enabled.");
-  Serial.print("Total len: "); Serial.println(olen);
+  // Serial.print("before: "); Serial.print(before);
+  // Serial.print(", after: "); Serial.print(after);
+  // Serial.print(", whichAES: "); Serial.print(whichAES);
+  // if(whichAES == 0) Serial.println(" ECB enabled.");
+  // else Serial.println(" CBC enabled.");
+  // Serial.print("Total len: "); Serial.println(olen);
   fillRandom(OracleBuff, before);
   memcpy(OracleBuff + before, buff, len);
   fillRandom(OracleBuff + before + len, after);

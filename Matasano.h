@@ -815,7 +815,7 @@ void Set2Challenge11() {
     Serial.print("\nAttempt #"); Serial.println(ix + 1);
     uint16_t len = OracleP11(Problem11, 200);
     if (detectDuplicates(encBuf, len, true)) {
-      Serial.println("Duplicate detected!");
+      Serial.print("Duplicate detected! ");
       numDetected += 1;
       if (whichAES == 0) {
         Serial.println("That was because ECB was enabled.");
@@ -823,7 +823,7 @@ void Set2Challenge11() {
       } else Serial.println("Weird: CBC was enabled...");
     }
     else {
-      Serial.println("No duplicate detected!");
+      Serial.print("No duplicate detected! ");
       if (whichAES == 1) Serial.println("That was because CBC was enabled.");
       else Serial.println("Weird: ECB was enabled...");
     }
