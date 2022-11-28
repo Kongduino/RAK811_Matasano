@@ -409,9 +409,9 @@ int16_t decryptCBC(uint8_t* myBuf, uint8_t olen, uint8_t* pKey, uint8_t* Iv) {
   return length;
 }
 
-uint8_t OracleBuff[256];
+uint8_t OracleBuff[256], whichAES;
 uint8_t OracleP11(uint8_t* buff, uint8_t len) {
-  uint8_t before, after, whichAES;
+  uint8_t before, after;
   uint8_t values[3];
   uint8_t pKey[16];
   fillRandom(pKey, 16);

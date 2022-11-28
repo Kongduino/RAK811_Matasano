@@ -809,13 +809,28 @@ void Set2Challenge11() {
   Serial.println(F("+------------------+"));
   Serial.println(" Set 2 Challenge 11");
   Serial.println(F("+------------------+"));
-  uint8_t Problem11[200];
+  uint8_t Problem11[200], numECB = 0, numDetected = 0;
   memset(Problem11, 'A', 200);
   for (uint8_t ix = 0; ix < 10; ix++) {
     Serial.print("\nAttempt #"); Serial.println(ix + 1);
     uint16_t len = OracleP11(Problem11, 200);
-    if (detectDuplicates(encBuf, len, true)) Serial.println("Duplicate detected!");
-    else Serial.println("No duplicate detected!");
+    if (detectDuplicates(encBuf, len, true)) {
+      Serial.println("Duplicate detected!");
+      numDetected += 1;
+      if (whichAES == 0) {
+        Serial.println("That was because ECB was enabled.");
+        numECB += 1;
+      } else Serial.println("Weird: CBC was enabled...");
+    }
+    else {
+      Serial.println("No duplicate detected!");
+      if (whichAES == 1) Serial.println("That was because CBC was enabled.");
+      else Serial.println("Weird: ECB was enabled...");
+    }
   }
+  Serial.print("Number of detections: ");
+  Serial.print(numDetected);
+  Serial.print(" vs number of ECB runs: ");
+  Serial.println(numECB);
 }
 #endif
