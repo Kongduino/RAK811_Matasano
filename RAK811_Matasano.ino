@@ -1,8 +1,8 @@
 #include "aes.c"
 #include <LoRa.h>
 #include <LoRandom.h>
-#include "Utilities.h"
 #include "Matasano.h"
+#include "Utilities.h"
 
 void setup() {
   Serial.begin(115200);
@@ -53,6 +53,9 @@ void setup() {
 #endif
 #ifdef CH_2_11
   Set2Challenge11();
+#endif
+#ifdef CH_2_12
+  Set2Challenge12();
 #endif
 }
 

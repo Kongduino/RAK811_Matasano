@@ -265,6 +265,19 @@ void initMatasano() {
   freqs['q'] = sc;
   for (uint8_t i = 0; i < 10; i++) freqs[0x30 + i] = 9;
   Serial.println(F(" done!"));
+#ifdef CH_2_12
+  Serial.print(F(" * Initializing Problem12 key..."));
+  fillRandom(p12Key, 16);
+  Serial.println(F(" done!"));
+  Serial.println(F(" * Unpacking Problem12 mystery phrase..."));
+  uint16_t fullLength = Base64decode_len((char*)Problem12a);
+  Serial.print(F("  - Full length: "));
+  Serial.println(fullLength);
+  p12bLen = Base64decode((uint8_t*)Problem12b, (char*)Problem12a);
+  Serial.print(F("  - p12bLen: "));
+  Serial.println(p12bLen);
+  Problem12b[p12bLen] = 0;
+#endif
 }
 
 int ScoreString(uint8_t* mb, uint16_t j) {
@@ -323,8 +336,6 @@ int getHammingDistance(uint8_t* buf0, uint8_t* buf1, uint8_t len) {
   return dist;
 }
 
-uint8_t encBuf[256] = {0}; // Let's make sure we have enough space for the encrypted string
-
 int16_t decryptECB(uint8_t* myBuf, uint8_t olen, uint8_t* pKey) {
   // Test the total len vs requirements:
   // AES: min 16 bytes
@@ -375,8 +386,8 @@ bool PKCS7(uint8_t* buff, uint16_t blockLen, uint16_t padLen) {
   if (blockLen >= padLen) return false;
   uint8_t c = padLen - blockLen;
   uint16_t i;
-  Serial.print("Padding with: ");
-  Serial.println(c);
+  //Serial.print("Padding with: ");
+  //Serial.println(c);
   for (i = 0; i < c; i++) buff[blockLen + i] = c;
   return true;
 }
@@ -409,7 +420,7 @@ int16_t decryptCBC(uint8_t* myBuf, uint8_t olen, uint8_t* pKey, uint8_t* Iv) {
   return length;
 }
 
-uint8_t OracleBuff[256], whichAES;
+#ifdef CH_2_11
 uint8_t OracleP11(uint8_t* buff, uint8_t len) {
   uint8_t before, after;
   uint8_t values[3];
@@ -442,6 +453,24 @@ uint8_t OracleP11(uint8_t* buff, uint8_t len) {
   }
   return length;
 }
+#endif
+
+#ifdef CH_2_12
+uint16_t OracleP12(uint8_t* buff, uint8_t len) {
+  uint8_t Iv[16];
+  fillRandom(Iv, 16);
+  uint8_t myBuff[256];
+  memcpy(myBuff, buff, len);
+  memcpy(myBuff + len, Problem12b, p12bLen);
+  uint16_t olen = len + p12bLen;
+  uint16_t rounds = olen / 16;
+  if (rounds == 0) rounds = 1;
+  else if (olen - (rounds * 16) != 0) rounds += 1;
+  uint16_t padLen = rounds * 16;
+  PKCS7(myBuff, olen, padLen);
+  return encryptECB(myBuff, padLen, p12Key);
+}
+#endif
 
 bool detectDuplicates(uint8_t* line, uint8_t len, bool breakEarly = false) {
   uint8_t lastMatch[16];
@@ -453,7 +482,7 @@ bool detectDuplicates(uint8_t* line, uint8_t len, bool breakEarly = false) {
         if (memcmp(line + j, line + k, 16) == 0) {
           memcpy(lastMatch, line + j, 16);
           result = true;
-          if(breakEarly) return true;
+          if (breakEarly) return true;
         }
       }
     } else {
