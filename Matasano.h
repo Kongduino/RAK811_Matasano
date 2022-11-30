@@ -903,19 +903,13 @@ void Set2Challenge12() {
   char decoded[p12bLen + 1] = {0};
   for (uint8_t numChar = 0; numChar < p12bLen; numChar++) {
     if (numChar % blockSize == 0) Serial.write('+');
-    else Serial.write('\n');
+    else Serial.write('.');
     uint16_t blkSz = (blockSize - 1) - (numChar % blockSize);
     uint16_t cLen = blkSz + numChar + 1;
     memset(tmp, 'A', blkSz);
     len = OracleP12(tmp, blkSz);
     memcpy(saveB, encBuf, cLen);
     if (numChar > 0) memcpy(tmp + blkSz, decoded, numChar);
-    // Serial.print("\n+====================+\nnumChar = ");
-    // Serial.print(numChar);
-    // Serial.print(", blkSz = ");
-    // Serial.print(blkSz);
-    // Serial.print(", cLen = ");
-    // Serial.println(cLen);
     bool found = false;
     for (uint16_t j = 0; j < 256; j++) {
       tmp[cLen - 1] = (uint8_t)j;
@@ -932,7 +926,7 @@ void Set2Challenge12() {
       Serial.println((char*)decoded);
       return;
     }
-  }
+  } Serial.write('\n');
   hexDump((uint8_t*)decoded, p12bLen);
 }
 #endif
