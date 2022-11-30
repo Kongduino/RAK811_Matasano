@@ -450,7 +450,7 @@ uint8_t OracleP11(uint8_t* buff, uint8_t len) {
 uint16_t OracleP12(uint8_t* buff, uint8_t len) {
   uint8_t Iv[16];
   fillRandom(Iv, 16);
-  uint8_t myBuff[256];
+  uint8_t myBuff[512];
   if (len > 0) memcpy(myBuff, buff, len);
   memcpy(myBuff + len, Problem12b, p12bLen);
   uint16_t olen = len + p12bLen;
