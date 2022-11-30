@@ -922,8 +922,6 @@ void Set2Challenge12() {
       len = OracleP12(tmp, cLen);
       if (memcmp(saveB, encBuf, cLen) == 0) {
         decoded[numChar] = (uint8_t)j;
-        decoded[numChar + 1] = 0;
-        Serial.println(decoded);
         found = true;
         j = 256;
         break;
@@ -935,6 +933,6 @@ void Set2Challenge12() {
       return;
     }
   }
-  hexDump(decoded, p12bLen);
+  hexDump((uint8_t*)decoded, p12bLen);
 }
 #endif
