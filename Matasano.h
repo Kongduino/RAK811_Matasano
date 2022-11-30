@@ -586,7 +586,7 @@ const PROGMEM char Problem10[] = "CRIwqt4+szDbqkNY+I0qbNXPg1XLaCM5etQ5Bt9DRFV/xI
 #ifdef CH_2_12
 uint8_t p12Key[16];
 const PROGMEM char Problem12a[] = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK";
-char Problem12b[140];
+char Problem12b[144];
 #endif
 
 #ifdef CH_1_1
@@ -868,9 +868,9 @@ void Set2Challenge12() {
   Serial.println(F("+------------------+"));
   Serial.println(" Set 2 Challenge 12");
   Serial.println(F("+------------------+"));
-  uint8_t ix;
-  uint8_t tmp[33], saveB[32];
-  uint16_t len, blockSize = 0;
+  uint8_t tmp[180], saveB[180];
+  uint8_t ix, rounds;
+  uint16_t len, blockSize = 0, position;
   for (ix = 1; ix < 33; ix++) {
     tmp[ix - 1] = 'A';
     len = OracleP12(tmp, ix);
@@ -878,18 +878,63 @@ void Set2Challenge12() {
     if (ix == 1) {
       memcpy(saveB, encBuf, 32);
     } else {
-      // Serial.print("Comparing saveB[0-ix] with encBuf[");
-      // Serial.print(ix - 1); Serial.write('-'); Serial.print(ix + ix - 1); Serial.println("]");
       if (memcmp(saveB, encBuf + ix - 1, ix) == 0) {
-        blockSize = ix-1;
+        blockSize = ix - 1;
         Serial.print("\n  --> Duplicated block at size ");
         Serial.print(ix);
         Serial.print(". Block size is ");
         Serial.println(blockSize);
+        Serial.println(". This takes care of points 1 (block length) and 2 (ECB).");
         break;
       }
     }
   }
-  
+
+  Serial.println(F(" * Unpacking Problem12 mystery phrase..."));
+  uint16_t fullLength = Base64decode_len((char*)Problem12a);
+  Serial.print(F("  - Full length: "));
+  Serial.println(fullLength);
+  p12bLen = Base64decode((uint8_t*)Problem12b, (char*)Problem12a);
+  p12bLen = OracleP12(tmp, 0);
+  Serial.print(F("  - p12bLen: "));
+  Serial.println(p12bLen);
+  Serial.print(F("  - blockSize: "));
+  Serial.println(blockSize);
+  char decoded[p12bLen + 1] = {0};
+  for (uint8_t numChar = 0; numChar < p12bLen; numChar++) {
+    if (numChar % blockSize == 0) Serial.write('+');
+    else Serial.write('\n');
+    uint16_t blkSz = (blockSize - 1) - (numChar % blockSize);
+    uint16_t cLen = blkSz + numChar + 1;
+    memset(tmp, 'A', blkSz);
+    len = OracleP12(tmp, blkSz);
+    memcpy(saveB, encBuf, cLen);
+    if (numChar > 0) memcpy(tmp + blkSz, decoded, numChar);
+    // Serial.print("\n+====================+\nnumChar = ");
+    // Serial.print(numChar);
+    // Serial.print(", blkSz = ");
+    // Serial.print(blkSz);
+    // Serial.print(", cLen = ");
+    // Serial.println(cLen);
+    bool found = false;
+    for (uint16_t j = 0; j < 256; j++) {
+      tmp[cLen - 1] = (uint8_t)j;
+      len = OracleP12(tmp, cLen);
+      if (memcmp(saveB, encBuf, cLen) == 0) {
+        decoded[numChar] = (uint8_t)j;
+        decoded[numChar + 1] = 0;
+        Serial.println(decoded);
+        found = true;
+        j = 256;
+        break;
+      }
+    }
+    if (!found) {
+      Serial.println("Stopping here!");
+      Serial.println((char*)decoded);
+      return;
+    }
+  }
+  hexDump(decoded, p12bLen);
 }
 #endif

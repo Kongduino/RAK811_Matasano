@@ -269,14 +269,6 @@ void initMatasano() {
   Serial.print(F(" * Initializing Problem12 key..."));
   fillRandom(p12Key, 16);
   Serial.println(F(" done!"));
-  Serial.println(F(" * Unpacking Problem12 mystery phrase..."));
-  uint16_t fullLength = Base64decode_len((char*)Problem12a);
-  Serial.print(F("  - Full length: "));
-  Serial.println(fullLength);
-  p12bLen = Base64decode((uint8_t*)Problem12b, (char*)Problem12a);
-  Serial.print(F("  - p12bLen: "));
-  Serial.println(p12bLen);
-  Problem12b[p12bLen] = 0;
 #endif
 }
 
@@ -336,11 +328,11 @@ int getHammingDistance(uint8_t* buf0, uint8_t* buf1, uint8_t len) {
   return dist;
 }
 
-int16_t decryptECB(uint8_t* myBuf, uint8_t olen, uint8_t* pKey) {
+int16_t decryptECB(uint8_t* myBuf, uint16_t olen, uint8_t* pKey) {
   // Test the total len vs requirements:
   // AES: min 16 bytes
   // HMAC if needed: 28 bytes
-  uint8_t reqLen = 16;
+  uint16_t reqLen = 16;
   if (olen < reqLen) return -1;
   uint8_t len;
   // or just copy over
@@ -348,8 +340,8 @@ int16_t decryptECB(uint8_t* myBuf, uint8_t olen, uint8_t* pKey) {
   len = olen;
   struct AES_ctx ctx;
   AES_init_ctx(&ctx, pKey);
-  uint8_t rounds = len / 16, steps = 0;
-  for (uint8_t ix = 0; ix < rounds; ix++) {
+  uint16_t rounds = len / 16, steps = 0;
+  for (uint16_t ix = 0; ix < rounds; ix++) {
     // void AES_ECB_encrypt(const struct AES_ctx* ctx, uint8_t* buf);
     AES_ECB_decrypt(&ctx, encBuf + steps);
     steps += 16;
@@ -371,7 +363,6 @@ uint16_t encryptECB(uint8_t* myBuf, uint16_t len, uint8_t* pKey) {
   }
   memset(encBuf, (olen - len), olen);
   memcpy(encBuf, myBuf, len);
-  encBuf[len] = 0;
   AES_init_ctx(&ctx, pKey);
   uint8_t rounds = olen / 16, steps = 0;
   for (uint8_t ix = 0; ix < rounds; ix++) {
@@ -460,7 +451,7 @@ uint16_t OracleP12(uint8_t* buff, uint8_t len) {
   uint8_t Iv[16];
   fillRandom(Iv, 16);
   uint8_t myBuff[256];
-  memcpy(myBuff, buff, len);
+  if (len > 0) memcpy(myBuff, buff, len);
   memcpy(myBuff + len, Problem12b, p12bLen);
   uint16_t olen = len + p12bLen;
   uint16_t rounds = olen / 16;
