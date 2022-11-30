@@ -11,7 +11,7 @@
 //#define CH_2_11
 #define CH_2_12
 
-uint8_t encBuf[256] = {0}; // Let's make sure we have enough space for the encrypted string
+uint8_t encBuf[512] = {0}; // Let's make sure we have enough space for the encrypted string
 
 bool detectDuplicates(uint8_t*, uint8_t, bool);
 int16_t decryptECB(uint8_t* myBuf, uint8_t olen, uint8_t* pKey);
@@ -868,7 +868,7 @@ void Set2Challenge12() {
   Serial.println(F("+------------------+"));
   Serial.println(" Set 2 Challenge 12");
   Serial.println(F("+------------------+"));
-  uint8_t tmp[180], saveB[180];
+  uint8_t tmp[512], saveB[512];
   uint8_t ix, rounds;
   uint16_t len, blockSize = 0, position;
   for (ix = 1; ix < 33; ix++) {
@@ -895,7 +895,7 @@ void Set2Challenge12() {
   Serial.print(F("  - Full length: "));
   Serial.println(fullLength);
   p12bLen = Base64decode((uint8_t*)Problem12b, (char*)Problem12a);
-  p12bLen = OracleP12(tmp, 0);
+  len = OracleP12(tmp, 0);
   Serial.print(F("  - p12bLen: "));
   Serial.println(p12bLen);
   Serial.print(F("  - blockSize: "));
