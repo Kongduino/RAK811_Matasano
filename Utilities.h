@@ -163,9 +163,9 @@ void xorBufSingle(uint8_t* buf, uint8_t c, uint16_t len) {
   for (uint16_t x = 0; x < len; x++) buf[x] ^= c;
 }
 
-uint16_t freqs[256] = {0};
 
 void initMatasano() {
+#ifdef NeedBestScore
   Serial.print(F(" * Initializing freqs array..."));
   uint8_t sc = 255;
   freqs['E'] = sc;
@@ -269,6 +269,7 @@ void initMatasano() {
   freqs['q'] = sc;
   for (uint8_t i = 0; i < 10; i++) freqs[0x30 + i] = 9;
   Serial.println(F(" done!"));
+#endif
 #ifdef CH_2_12
   Serial.print(F(" * Initializing Problem12 key..."));
   fillRandom(p12Key, 16);
@@ -277,6 +278,7 @@ void initMatasano() {
 }
 
 #ifdef NeedBestScore
+uint16_t freqs[256] = {0};
 int ScoreString(uint8_t* mb, uint16_t j) {
   uint16_t i, x, score, n;
   uint16_t myFreqs[256];
@@ -336,7 +338,7 @@ int getHammingDistance(uint8_t* buf0, uint8_t* buf1, uint8_t len) {
 }
 #endif
 
-#ifdef NeedDecrypt
+#ifdef NeedDecryptECB
 int16_t decryptECB(uint8_t* myBuf, uint16_t olen, uint8_t* pKey) {
   // Test the total len vs requirements:
   // AES: min 16 bytes
@@ -360,7 +362,7 @@ int16_t decryptECB(uint8_t* myBuf, uint16_t olen, uint8_t* pKey) {
 }
 #endif
 
-#define NeedEncrypt
+#ifdef NeedEncryptECB
 uint16_t encryptECB(uint8_t* myBuf, uint16_t len, uint8_t* pKey) {
   // first ascertain length
   uint16_t olen;
@@ -388,13 +390,12 @@ bool PKCS7(uint8_t* buff, uint16_t blockLen, uint16_t padLen) {
   if (blockLen >= padLen) return false;
   uint8_t c = padLen - blockLen;
   uint16_t i;
-  //Serial.print("Padding with: ");
-  //Serial.println(c);
   for (i = 0; i < c; i++) buff[blockLen + i] = c;
   return true;
 }
+#endif
 
-
+#ifdef NeedEncryptCBC
 int16_t encryptCBC(uint8_t* myBuf, uint8_t olen, uint8_t* pKey, uint8_t* Iv) {
   uint8_t rounds = olen / 16;
   if (rounds == 0) rounds = 1;
@@ -407,7 +408,9 @@ int16_t encryptCBC(uint8_t* myBuf, uint8_t olen, uint8_t* pKey, uint8_t* Iv) {
   AES_CBC_encrypt_buffer(&ctx, encBuf, length);
   return length;
 }
+#endif
 
+#ifdef NeedDecryptCBC
 int16_t decryptCBC(uint8_t* myBuf, uint8_t olen, uint8_t* pKey, uint8_t* Iv) {
   uint8_t rounds = olen / 16;
   if (rounds == 0) rounds = 1;
@@ -421,8 +424,10 @@ int16_t decryptCBC(uint8_t* myBuf, uint8_t olen, uint8_t* pKey, uint8_t* Iv) {
   AES_CBC_decrypt_buffer(&ctx, encBuf, length);
   return length;
 }
-
+#endif
 #ifdef CH_2_11
+#define NeedEncryptECB
+#define NeedEncryptCBC
 uint8_t OracleP11(uint8_t* buff, uint8_t len) {
   uint8_t before, after;
   uint8_t values[3];
@@ -461,7 +466,7 @@ uint8_t OracleP11(uint8_t* buff, uint8_t len) {
 uint16_t OracleP12(uint8_t* buff, uint16_t len) {
   uint8_t Iv[16];
   fillRandom(Iv, 16);
-  uint8_t myBuff[368];
+  uint8_t myBuff[512];
   if (len > 0) memcpy(myBuff, buff, len);
   memcpy(myBuff + len, Problem12b, p12bLen);
   uint16_t olen = len + p12bLen;
@@ -474,6 +479,7 @@ uint16_t OracleP12(uint8_t* buff, uint16_t len) {
 }
 #endif
 
+#ifdef NeedDuplicates
 bool detectDuplicates(uint8_t* line, uint8_t len, bool breakEarly = false) {
   uint8_t lastMatch[16];
   uint8_t olen = len - 16;
@@ -493,3 +499,4 @@ bool detectDuplicates(uint8_t* line, uint8_t len, bool breakEarly = false) {
   }
   return result;
 }
+#endif
