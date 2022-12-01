@@ -916,9 +916,9 @@ void Set2Challenge12() {
   Serial.print(F("  - blockSize: "));
   Serial.println(blockSize);
   char decoded[145] = {0};
+  double t0 = millis();
+  Serial.print(F("START\n"));
   for (uint8_t numChar = 0; numChar < p12bLen; numChar++) {
-    if (numChar % blockSize == 0) Serial.write('+');
-    else Serial.write('.');
     uint16_t blkSz = (blockSize - 1) - (numChar % blockSize);
     uint16_t cLen = ((numChar / 16) + 1) * 16;
     memset(tmp, 'A', blkSz);
@@ -940,6 +940,17 @@ void Set2Challenge12() {
       Serial.println((char*)decoded);
       return;
     }
+    if (numChar == 0) {
+      double t1 = (millis() - t0) / 1000;
+      t1 *= p12bLen;
+      Serial.print("Expected duration: ");
+      Serial.print(t1);
+      Serial.print(" secs. ");
+      Serial.print(float(t1 / 60.0), 2);
+      Serial.println(" mn");
+    }
+    if (numChar % blockSize == 0) Serial.write('+');
+    else Serial.write('.');
   } Serial.write('\n');
   hexDump((uint8_t*)decoded, p12bLen);
   decoded[p12bLen] = 0;
