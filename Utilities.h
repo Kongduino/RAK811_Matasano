@@ -13,6 +13,7 @@ uint8_t readRegister(uint8_t reg) {
   return LoRa.readRegister(reg);
 }
 
+#ifdef NeedBase64Decode
 static const unsigned char pr2six[256] = {
   /* ASCII table */
   64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
@@ -79,7 +80,9 @@ int Base64decode(uint8_t* bufplain, char *bufcoded) {
   nbytesdecoded -= (4 - nprbytes) & 3;
   return nbytesdecoded;
 }
+#endif
 
+#ifdef NeedBase64Encode
 static const char basis_64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 int Base64encode_len(int len) {
@@ -110,6 +113,7 @@ int Base64encode(char *encoded, uint8_t* plain, int len) {
   *p++ = '\0';
   return p - encoded;
 }
+#endif
 
 void hex2array(char* src, uint8_t* dst, uint16_t sLen) {
   uint16_t i, n = 0;
@@ -272,6 +276,7 @@ void initMatasano() {
 #endif
 }
 
+#ifdef NeedBestScore
 int ScoreString(uint8_t* mb, uint16_t j) {
   uint16_t i, x, score, n;
   uint16_t myFreqs[256];
@@ -315,7 +320,9 @@ int GetBestScore(uint8_t* tmp0, uint16_t len) {
   }
   return maxScoreHolder;
 }
+#endif
 
+#ifdef CH_1_6
 int getHammingDistance(uint8_t* buf0, uint8_t* buf1, uint8_t len) {
   uint8_t dist = 0;
   for (uint8_t i = 0; i < len; i++) {
@@ -327,7 +334,9 @@ int getHammingDistance(uint8_t* buf0, uint8_t* buf1, uint8_t len) {
   }
   return dist;
 }
+#endif
 
+#ifdef NeedDecrypt
 int16_t decryptECB(uint8_t* myBuf, uint16_t olen, uint8_t* pKey) {
   // Test the total len vs requirements:
   // AES: min 16 bytes
@@ -349,7 +358,9 @@ int16_t decryptECB(uint8_t* myBuf, uint16_t olen, uint8_t* pKey) {
   } encBuf[steps] = 0;
   return len;
 }
+#endif
 
+#define NeedEncrypt
 uint16_t encryptECB(uint8_t* myBuf, uint16_t len, uint8_t* pKey) {
   // first ascertain length
   uint16_t olen;
@@ -450,7 +461,7 @@ uint8_t OracleP11(uint8_t* buff, uint8_t len) {
 uint16_t OracleP12(uint8_t* buff, uint16_t len) {
   uint8_t Iv[16];
   fillRandom(Iv, 16);
-  uint8_t myBuff[512];
+  uint8_t myBuff[368];
   if (len > 0) memcpy(myBuff, buff, len);
   memcpy(myBuff + len, Problem12b, p12bLen);
   uint16_t olen = len + p12bLen;
